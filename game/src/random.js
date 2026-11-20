@@ -1,0 +1,1 @@
+export function rng(seed=1337){let s=seed>>>0;return()=>((s=Math.imul(1664525,s)+1013904223>>>0)/4294967296)}export const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));export const lerp=(a,b,t)=>a+(b-a)*t;export const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);export const pick=(r,a)=>a[Math.floor(r()*a.length)];

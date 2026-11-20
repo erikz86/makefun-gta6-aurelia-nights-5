@@ -1,0 +1,22 @@
+import {COLORS,W,H} from './config.js';export function render(g,w,p,pol,m,cam,mini,particles=[]){const time=performance.now()/1000;g.clearRect(0,0,g.canvas.width,g.canvas.height);g.save();g.translate(g.canvas.width/2-cam.x,g.canvas.height/2-cam.y);g.fillStyle=COLORS.sea;g.fillRect(0,0,W,H);for(const d of w.districts){g.fillStyle=d.c;g.fillRect(d.x,d.y,d.w,d.h)}for(const r of w.roads){g.fillStyle=COLORS.road;g.fillRect(r.x,r.y,r.w,r.h);g.fillStyle=COLORS.line;g.fillRect(r.x+r.w/2-1,r.y,2,r.h);g.fillRect(r.x,r.y+r.h/2-1,r.w,2)}for(const q of w.parks){g.fillStyle='#1c5c48';g.fillRect(q.x,q.y,q.w,q.h);for(let i=0;i<8;i++){g.fillStyle='#61ae63';g.beginPath();g.arc(q.x+20+(i*47)%q.w,q.y+30+(i*71)%q.h,8,0,7);g.fill()}}for(const b of w.buildings){g.fillStyle=b.c;g.fillRect(b.x,b.y,b.w,b.h);g.fillStyle='#91d8d4';for(let x=b.x+12;x<b.x+b.w-8;x+=22)g.fillRect(x,b.y+12,8,6)}drawCityLights(g,w,time);for(const c of w.cars){g.save();g.translate(c.x,c.y);g.rotate(c.a);if(c===p.vehicle){const beam=g.createLinearGradient(12,0,200,0);beam.addColorStop(0,'rgba(255,231,140,.48)');beam.addColorStop(1,'rgba(255,231,140,0)');g.fillStyle=beam;g.beginPath();g.moveTo(12,-7);g.lineTo(205,-65);g.lineTo(205,65);g.lineTo(12,7);g.closePath();g.fill()}g.fillStyle=c.color;g.fillRect(-18,-9,36,18);g.fillStyle='#bde7ed';g.fillRect(-6,-7,12,14);g.restore()}for(const u of pol.units){g.fillStyle='#e85d67';g.beginPath();g.arc(u.x,u.y,14,0,7);g.fill();g.fillStyle=Math.floor(time*8)%2?'#ff365f':'#379dff';g.shadowColor=g.fillStyle;g.shadowBlur=24;g.fillRect(u.x-10,u.y-5,9,10);g.fillStyle=Math.floor(time*8)%2?'#379dff':'#ff365f';g.fillRect(u.x+1,u.y-5,9,10);g.shadowBlur=0}for(const x of w.peds){g.fillStyle=x.run?'#ffcc70':'#d4e5e8';g.beginPath();g.arc(x.x,x.y,5,0,7);g.fill()}g.fillStyle='#f2c36b';g.beginPath();g.arc(p.x,p.y,13,0,7);g.fill();g.fillStyle='#152332';g.fillRect(p.x-8,p.y+5,16,14);if(m){g.strokeStyle='#ffd36e';g.lineWidth=3;g.beginPath();g.arc(m.target.x,m.target.y,28+Math.sin(Date.now()/200)*6,0,7);g.stroke()}drawDistrictSigns(g,w);drawParticles(g,particles,time);g.restore();drawRain(g,time);mini.clearRect(0,0,180,120);mini.fillStyle='#0d2430';mini.fillRect(0,0,180,120);const sx=180/W,sy=120/H;for(const b of w.buildings){mini.fillStyle='#7d7180';mini.fillRect(b.x*sx,b.y*sy,b.w*sx,b.h*sy)}mini.fillStyle='#ffd16d';mini.fillRect(p.x*sx-2,p.y*sy-2,5,5);mini.fillStyle='#ed6870';for(const u of pol.units)mini.fillRect(u.x*sx,u.y*sy,4,4)}
+
+function drawCityLights(g,w,time){
+  for(const r of w.roads)for(let i=40;i<(r.w>r.h?r.w:r.h);i+=170){
+    const x=r.x+(r.w>r.h?i:8),y=r.y+(r.w>r.h?8:i);
+    const glow=g.createRadialGradient(x,y,2,x,y,60);glow.addColorStop(0,'rgba(255,218,124,.28)');glow.addColorStop(1,'rgba(255,218,124,0)');
+    g.fillStyle=glow;g.fillRect(x-60,y-60,120,120);g.fillStyle='#ffe1a0';g.fillRect(x-2,y-2,4,4);
+  }
+}
+function drawDistrictSigns(g,w){
+  g.save();g.font='bold 20px monospace';g.textAlign='center';
+  for(const d of w.districts){const x=d.x+d.w/2,y=d.y+110;g.fillStyle='rgba(8,15,31,.85)';g.fillRect(x-126,y-25,252,42);g.strokeStyle='#59e9df';g.strokeRect(x-126,y-25,252,42);g.shadowColor='#ff76cf';g.shadowBlur=15;g.fillStyle='#ffabe5';g.fillText(d.name.toUpperCase(),x,y+2)}g.restore();
+}
+function drawParticles(g,particles,time){
+  g.save();g.globalCompositeOperation='lighter';for(const p of particles){const age=1-p.t;g.globalAlpha=Math.max(0,p.t);for(let i=0;i<9;i++){const a=i*2.399;const radius=age*(35+i*7);g.strokeStyle=i%2?'#ffd979':'#ff8d45';g.lineWidth=2;g.beginPath();g.moveTo(p.x+Math.cos(a)*radius,p.y+Math.sin(a)*radius);g.lineTo(p.x+Math.cos(a)*(radius+6),p.y+Math.sin(a)*(radius+6));g.stroke()}g.fillStyle='#a6a2a0';g.beginPath();g.arc(p.x,p.y,3+age*18,0,Math.PI*2);g.globalAlpha=p.t*.18;g.fill()}g.restore();
+}
+function drawRain(g,time){
+  const storm=['storm','heist'].includes(new URLSearchParams(location.search).get('shot'));const width=g.canvas.width,height=g.canvas.height;
+  g.save();g.strokeStyle=storm?'rgba(169,212,245,.43)':'rgba(169,212,245,.18)';g.lineWidth=1;
+  for(let i=0;i<(storm?220:55);i++){const x=((i*127.31-time*170)%(width+40)+width+40)%(width+40),y=(i*89.73+time*650)%(height+40);g.beginPath();g.moveTo(x,y);g.lineTo(x-7,y+18);g.stroke();const phase=(time*1.8+i*.37)%1;if(phase<.25){g.globalAlpha=1-phase*4;g.beginPath();g.ellipse((i*173.7)%width,(i*97.3)%height,2+phase*18,1+phase*5,0,0,Math.PI*2);g.stroke();g.globalAlpha=1}}
+  g.restore();
+}
